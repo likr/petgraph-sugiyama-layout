@@ -7,3 +7,4 @@ extern crate fixedbitset;
 pub mod cross;
 pub mod crossing_reduction;
 pub mod cycle_removal;
+pub mod layer_assignment;
