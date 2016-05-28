@@ -38,6 +38,16 @@ pub fn cycle_edges<N, E> (
     result
 }
 
+pub fn remove_cycle<N, E> (
+    graph: &mut Graph<N, E, Directed>
+) {
+    for (u, v) in cycle_edges(graph) {
+        let index = graph.find_edge(u, v).unwrap();
+        let weight = graph.remove_edge(index).unwrap();
+        graph.add_edge(v, u, weight);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use petgraph::Graph;
@@ -53,5 +63,21 @@ mod tests {
         graph.add_edge(b, c, "");
         graph.add_edge(c, a, "");
         assert_eq!(cycle_edges(&graph), vec![(c, a)]);
+    }
+
+    #[test]
+    fn test_remove_cycle() {
+        let mut graph = Graph::<&str, &str>::new();
+        let a = graph.add_node("a");
+        let b = graph.add_node("b");
+        let c = graph.add_node("c");
+        graph.add_edge(a, b, "");
+        graph.add_edge(b, c, "");
+        graph.add_edge(c, a, "");
+        remove_cycle(&mut graph);
+        assert!(graph.find_edge(a, b).is_some());
+        assert!(graph.find_edge(a, c).is_some());
+        assert!(graph.find_edge(b, c).is_some());
+        assert_eq!(graph.edge_count(), 3);
     }
 }
