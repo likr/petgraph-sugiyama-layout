@@ -12,7 +12,7 @@ pub fn vertical_alignment(
         graph[u].align = Some(u);
     }
     for layer in layers.iter().skip(1) {
-        let mut r = usize::min_value();
+        let mut r = i32::min_value();
         for v in layer {
             match median(graph, *v, EdgeDirection::Incoming) {
                 Some((left, right)) => {
@@ -24,11 +24,12 @@ pub fn vertical_alignment(
                     for u in medians {
                         let edge = graph.find_edge(u, *v).unwrap();
                         if !graph[edge].conflict {
-                            if r < graph[u].order {
+                            let u_order = graph[u].order as i32;
+                            if r < u_order {
                                 graph[*v].align = graph[u].root;
                                 graph[*v].root = graph[u].root;
                                 graph[u].align = Some(*v);
-                                r = graph[u].order;
+                                r = u_order;
                                 break;
                             }
                         }
@@ -49,32 +50,32 @@ mod tests {
     #[test]
     fn test_vertical_alignment() {
         let mut graph = Graph::new();
-        let a1 = graph.add_node(Node { order: 1, dummy: false, .. Node::new() });
-        let a2 = graph.add_node(Node { order: 2, dummy: false, .. Node::new() });
-        let b1 = graph.add_node(Node { order: 1, dummy: false, .. Node::new() });
-        let b2 = graph.add_node(Node { order: 2, dummy: false, .. Node::new() });
-        let b3 = graph.add_node(Node { order: 3, dummy: true, .. Node::new() });
-        let b4 = graph.add_node(Node { order: 4, dummy: false, .. Node::new() });
-        let b5 = graph.add_node(Node { order: 5, dummy: true, .. Node::new() });
-        let b6 = graph.add_node(Node { order: 6, dummy: true, .. Node::new() });
-        let b7 = graph.add_node(Node { order: 7, dummy: false, .. Node::new() });
-        let b8 = graph.add_node(Node { order: 8, dummy: false, .. Node::new() });
-        let c1 = graph.add_node(Node { order: 1, dummy: false, .. Node::new() });
-        let c2 = graph.add_node(Node { order: 2, dummy: false, .. Node::new() });
-        let c3 = graph.add_node(Node { order: 3, dummy: true, .. Node::new() });
-        let c4 = graph.add_node(Node { order: 4, dummy: true, .. Node::new() });
-        let c5 = graph.add_node(Node { order: 5, dummy: true, .. Node::new() });
-        let c6 = graph.add_node(Node { order: 6, dummy: false, .. Node::new() });
-        let d1 = graph.add_node(Node { order: 1, dummy: false, .. Node::new() });
-        let d2 = graph.add_node(Node { order: 2, dummy: false, .. Node::new() });
-        let d3 = graph.add_node(Node { order: 3, dummy: true, .. Node::new() });
-        let d4 = graph.add_node(Node { order: 4, dummy: true, .. Node::new() });
-        let d5 = graph.add_node(Node { order: 5, dummy: true, .. Node::new() });
-        let d6 = graph.add_node(Node { order: 6, dummy: false, .. Node::new() });
-        let d7 = graph.add_node(Node { order: 7, dummy: true, .. Node::new() });
-        let e1 = graph.add_node(Node { order: 1, dummy: false, .. Node::new() });
-        let e2 = graph.add_node(Node { order: 2, dummy: false, .. Node::new() });
-        let e3 = graph.add_node(Node { order: 3, dummy: false, .. Node::new() });
+        let a1 = graph.add_node(Node { order: 0, dummy: false, .. Node::new() });
+        let a2 = graph.add_node(Node { order: 1, dummy: false, .. Node::new() });
+        let b1 = graph.add_node(Node { order: 0, dummy: false, .. Node::new() });
+        let b2 = graph.add_node(Node { order: 1, dummy: false, .. Node::new() });
+        let b3 = graph.add_node(Node { order: 2, dummy: true, .. Node::new() });
+        let b4 = graph.add_node(Node { order: 3, dummy: false, .. Node::new() });
+        let b5 = graph.add_node(Node { order: 4, dummy: true, .. Node::new() });
+        let b6 = graph.add_node(Node { order: 5, dummy: true, .. Node::new() });
+        let b7 = graph.add_node(Node { order: 6, dummy: false, .. Node::new() });
+        let b8 = graph.add_node(Node { order: 7, dummy: false, .. Node::new() });
+        let c1 = graph.add_node(Node { order: 0, dummy: false, .. Node::new() });
+        let c2 = graph.add_node(Node { order: 1, dummy: false, .. Node::new() });
+        let c3 = graph.add_node(Node { order: 2, dummy: true, .. Node::new() });
+        let c4 = graph.add_node(Node { order: 3, dummy: true, .. Node::new() });
+        let c5 = graph.add_node(Node { order: 4, dummy: true, .. Node::new() });
+        let c6 = graph.add_node(Node { order: 5, dummy: false, .. Node::new() });
+        let d1 = graph.add_node(Node { order: 0, dummy: false, .. Node::new() });
+        let d2 = graph.add_node(Node { order: 1, dummy: false, .. Node::new() });
+        let d3 = graph.add_node(Node { order: 2, dummy: true, .. Node::new() });
+        let d4 = graph.add_node(Node { order: 3, dummy: true, .. Node::new() });
+        let d5 = graph.add_node(Node { order: 4, dummy: true, .. Node::new() });
+        let d6 = graph.add_node(Node { order: 5, dummy: false, .. Node::new() });
+        let d7 = graph.add_node(Node { order: 6, dummy: true, .. Node::new() });
+        let e1 = graph.add_node(Node { order: 0, dummy: false, .. Node::new() });
+        let e2 = graph.add_node(Node { order: 1, dummy: false, .. Node::new() });
+        let e3 = graph.add_node(Node { order: 2, dummy: false, .. Node::new() });
         graph.add_edge(a1, b1, Edge { conflict: false, .. Edge::new() });
         graph.add_edge(a1, b6, Edge { conflict: false, .. Edge::new() });
         graph.add_edge(a1, b8, Edge { conflict: false, .. Edge::new() });
