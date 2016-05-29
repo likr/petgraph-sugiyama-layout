@@ -1,3 +1,4 @@
+use std::iter::FromIterator;
 use petgraph::{Graph, Directed};
 use petgraph::graph::NodeIndex;
 use super::graph::{Node, Edge};
@@ -26,7 +27,6 @@ pub fn mark_conflicts(
 ) {
     for i in 1..(layers.len() - 1) {
         let h1 = layers.get(i).unwrap();
-
         let (inner, outer) = segment(graph, &h1);
         for (u1, v1) in inner {
             for &(u2, v2) in &outer {
@@ -39,6 +39,30 @@ pub fn mark_conflicts(
                     graph[index].conflict = true;
                 }
             }
+        }
+    }
+}
+
+pub fn median(
+    graph: &Graph<Node, Edge, Directed>,
+    u: NodeIndex
+) -> (NodeIndex, NodeIndex) {
+    let mut vertices = Vec::from_iter(graph.neighbors(u));
+    vertices.sort_by_key(|v| graph[*v].order);
+    let n = vertices.len();
+    if n % 2 == 0 {
+        (vertices[n / 2 - 1], vertices[n / 2])
+    } else {
+        (vertices[n / 2], vertices[n / 2])
+    }
+}
+
+fn vertical_alignment(
+    graph: &mut Graph<Node, Edge, Directed>,
+    layers: &Vec<Vec<NodeIndex>>
+) {
+    for layer in layers {
+        for v in layer {
         }
     }
 }
@@ -163,6 +187,27 @@ mod tests {
         assert!(graph[b8c2].conflict);
         assert!(graph[c1d6].conflict);
         assert!(graph[c6d3].conflict);
+    }
+
+    #[test]
+    fn test_median() {
+        let mut graph = Graph::new();
+        let u1 = graph.add_node(Node::new());
+        let v1 = graph.add_node(Node::new());
+        let v2 = graph.add_node(Node::new());
+        let v3 = graph.add_node(Node::new());
+        let v4 = graph.add_node(Node::new());
+        graph.add_edge(u1, v1, Edge::new());
+        graph.add_edge(u1, v2, Edge::new());
+        graph.add_edge(u1, v3, Edge::new());
+        graph.add_edge(u1, v4, Edge::new());
+        graph[v1].order = 0;
+        graph[v2].order = 1;
+        graph[v3].order = 2;
+        graph[v4].order = 3;
+        let (left, right) = median(&graph, u1);
+        assert_eq!(left, v2);
+        assert_eq!(right, v3);
     }
 
     #[test]
