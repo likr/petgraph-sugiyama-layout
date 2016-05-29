@@ -10,6 +10,8 @@ pub struct Node {
     pub dummy: bool,
     pub align: Option<NodeIndex>,
     pub root: Option<NodeIndex>,
+    pub sink: Option<NodeIndex>,
+    pub shift: i32,
 }
 
 impl Node {
@@ -24,6 +26,8 @@ impl Node {
             dummy: false,
             align: None,
             root: None,
+            sink: None,
+            shift: i32::min_value(),
         }
     }
 }
