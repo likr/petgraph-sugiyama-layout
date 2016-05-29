@@ -1,3 +1,5 @@
+use petgraph::graph::NodeIndex;
+
 pub struct Node {
     pub layer: usize,
     pub order: usize,
@@ -6,6 +8,8 @@ pub struct Node {
     pub x: i32,
     pub y: i32,
     pub dummy: bool,
+    pub align: Option<NodeIndex>,
+    pub root: Option<NodeIndex>,
 }
 
 impl Node {
@@ -18,6 +22,8 @@ impl Node {
             x: 0,
             y: 0,
             dummy: false,
+            align: None,
+            root: None,
         }
     }
 }
