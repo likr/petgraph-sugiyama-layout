@@ -5,17 +5,25 @@ use super::super::graph::{Node, Edge};
 fn place_block(
     graph: &mut Graph<Node, Edge, Directed>,
     layers: &Vec<Vec<NodeIndex>>,
-    v: NodeIndex
+    v: NodeIndex,
+    rtol: bool
 ) {
     if graph[v].x > 0 {
         return;
     }
     let mut w = v;
     loop {
-        if graph[w].order > 0 {
-            let p = layers[graph[w].layer][graph[w].order - 1];
+        let w_layer = graph[w].layer;
+        let w_order = graph[w].order;
+
+        if (rtol && w_order < layers[w_layer].len() - 1) || (!rtol && w_order > 0) {
+            let p = if rtol {
+                layers[w_layer][w_order + 1]
+            } else {
+                layers[w_layer][w_order - 1]
+            };
             let u = graph[p].root.unwrap();
-            place_block(graph, layers, u);
+            place_block(graph, layers, u, rtol);
             if graph[v].sink.unwrap() == v {
                 graph[v].sink = graph[u].sink;
             }
@@ -45,7 +53,8 @@ fn place_block(
 
 pub fn horizontal_compaction(
     graph: &mut Graph<Node, Edge, Directed>,
-    layers: &Vec<Vec<NodeIndex>>
+    layers: &Vec<Vec<NodeIndex>>,
+    rtol: bool
 ) {
     for u in graph.node_indices() {
         graph[u].sink = Some(u);
@@ -54,7 +63,7 @@ pub fn horizontal_compaction(
     }
     for u in graph.node_indices() {
         if graph[u].root.unwrap() == u {
-            place_block(graph, layers, u);
+            place_block(graph, layers, u, rtol);
         }
     }
     for u in graph.node_indices() {
@@ -192,7 +201,7 @@ mod tests {
             vec![d1, d2, d3, d4, d5, d6, d7],
             vec![e1, e2, e3],
         ];
-        horizontal_compaction(&mut graph, &layers);
+        horizontal_compaction(&mut graph, &layers, false);
         assert_eq!(graph[a1].x, 0);
         assert_eq!(graph[a2].x, 20);
         assert_eq!(graph[b1].x, 0);

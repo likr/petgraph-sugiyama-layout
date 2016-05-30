@@ -3,42 +3,76 @@ use petgraph::graph::NodeIndex;
 use super::super::graph::{Node, Edge};
 use super::median::median;
 
+fn iter_layer<'a, I: Iterator<Item=&'a NodeIndex>> (
+    graph: &mut Graph<Node, Edge, Directed>,
+    rtol: bool,
+    layer: I
+) {
+    let mut r = if rtol {
+        i32::max_value()
+    } else {
+        i32::min_value()
+    };
+    for v in layer {
+        match median(graph, *v, EdgeDirection::Incoming) {
+            Some((left, right)) => {
+                let medians = if left == right {
+                    vec![left]
+                } else {
+                    if rtol {
+                        vec![right, left]
+                    } else {
+                        vec![left, right]
+                    }
+                };
+                for u in medians {
+                    let edge = graph.find_edge(u, *v).unwrap();
+                    if !graph[edge].conflict {
+                        let u_order = graph[u].order as i32;
+                        if (rtol && r > u_order) || (!rtol && r < u_order) {
+                            graph[*v].align = graph[u].root;
+                            graph[*v].root = graph[u].root;
+                            graph[u].align = Some(*v);
+                            r = u_order;
+                            break;
+                        }
+                    }
+                }
+            },
+            None => {},
+        };
+    }
+}
+
+fn iter_layers<'a, I: Iterator<Item=&'a Vec<NodeIndex>>> (
+    graph: &mut Graph<Node, Edge, Directed>,
+    rtol: bool,
+    layers: I
+) {
+    for layer in layers.skip(1) {
+        if rtol {
+            iter_layer(graph, rtol, layer.iter().rev());
+        } else {
+            iter_layer(graph, rtol, layer.iter());
+        };
+    }
+}
+
 pub fn vertical_alignment(
     graph: &mut Graph<Node, Edge, Directed>,
-    layers: &Vec<Vec<NodeIndex>>
+    layers: &Vec<Vec<NodeIndex>>,
+    rtol: bool,
+    btot: bool
 ) {
     for u in graph.node_indices() {
         graph[u].root = Some(u);
         graph[u].align = Some(u);
     }
-    for layer in layers.iter().skip(1) {
-        let mut r = i32::min_value();
-        for v in layer {
-            match median(graph, *v, EdgeDirection::Incoming) {
-                Some((left, right)) => {
-                    let medians = if left == right {
-                        vec![left]
-                    } else {
-                        vec![left, right]
-                    };
-                    for u in medians {
-                        let edge = graph.find_edge(u, *v).unwrap();
-                        if !graph[edge].conflict {
-                            let u_order = graph[u].order as i32;
-                            if r < u_order {
-                                graph[*v].align = graph[u].root;
-                                graph[*v].root = graph[u].root;
-                                graph[u].align = Some(*v);
-                                r = u_order;
-                                break;
-                            }
-                        }
-                    }
-                },
-                None => {},
-            };
-        }
-    }
+    if btot {
+        iter_layers(graph, rtol, layers.iter().rev());
+    } else {
+        iter_layers(graph, rtol, layers.iter());
+    };
 }
 
 #[cfg(test)]
@@ -113,7 +147,7 @@ mod tests {
             vec![d1, d2, d3, d4, d5, d6, d7],
             vec![e1, e2, e3],
         ];
-        vertical_alignment(&mut graph, &layers);
+        vertical_alignment(&mut graph, &layers, false, false);
         assert_eq!(graph[a1].root.unwrap(), a1);
         assert_eq!(graph[a1].align.unwrap(), b1);
         assert_eq!(graph[a2].root.unwrap(), a2);

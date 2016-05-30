@@ -18,20 +18,34 @@ pub fn brandes(
         (true, true),
     ];
     let mut xs = Vec::from_iter(graph.node_indices().map(|_| [0; 4]));
-    let mut min_width_left = 0;
-    let mut min_width_right = i32::max_value();
+    let mut left = [0; 4];
+    let mut right = [0; 4];
     for (i, direction) in directions.iter().enumerate() {
-        vertical_alignment(graph, layers);
-        horizontal_compaction(graph, layers);
-        let left = graph.node_indices().map(|u| graph[u].x).min().unwrap();
-        let right = graph.node_indices().map(|u| graph[u].x).max().unwrap();
-        println!("{} {} {} {}", min_width_left, min_width_right, left, right);
-        if right - left < min_width_right - min_width_left {
-            min_width_left = left;
-            min_width_right = right;
+        let (rtol, btot) = *direction;
+        vertical_alignment(graph, layers, rtol, btot);
+        horizontal_compaction(graph, layers, rtol);
+        if rtol {
+            for u in graph.node_indices() {
+                graph[u].x = -graph[u].x;
+            }
         }
+        left[i] = graph.node_indices().map(|u| graph[u].x).min().unwrap();
+        right[i] = graph.node_indices().map(|u| graph[u].x).max().unwrap();
         for u in graph.node_indices() {
             xs[u.index()][i] = graph[u].x;
+        }
+    }
+    let min_width_index = (0..4).min_by_key(|i| right[*i] - left[*i]).unwrap();
+    for (i, direction) in directions.iter().enumerate() {
+        let (rtol, _) = *direction;
+        if rtol {
+            for u in graph.node_indices() {
+                xs[u.index()][i] += right[min_width_index] - right[i]
+            }
+        } else {
+            for u in graph.node_indices() {
+                xs[u.index()][i] += left[min_width_index] - left[i]
+            }
         }
     }
 }
