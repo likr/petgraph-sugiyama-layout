@@ -41,7 +41,6 @@ pub fn crossing_reduction<N, E>(
 
 #[cfg(test)]
 mod tests {
-    use test::Bencher;
     use petgraph::Graph;
     use petgraph::visit::GetAdjacencyMatrix;
     use super::*;
@@ -67,27 +66,5 @@ mod tests {
         let matrix = graph.adjacency_matrix();
         crossing_reduction(&graph, &matrix, &h1, &mut h2);
         assert_eq!(h2, vec![v2, v3, v1]);
-    }
-
-    #[bench]
-    fn bench_crossing_reduction(b: &mut Bencher) {
-        let mut graph = Graph::<&str, &str>::new();
-        let u1 = graph.add_node("u1");
-        let u2 = graph.add_node("u2");
-        let u3 = graph.add_node("u3");
-        let u4 = graph.add_node("u4");
-        let v1 = graph.add_node("v1");
-        let v2 = graph.add_node("v2");
-        let v3 = graph.add_node("v3");
-        graph.add_edge(u1, v2, "");
-        graph.add_edge(u2, v2, "");
-        graph.add_edge(u2, v3, "");
-        graph.add_edge(u3, v1, "");
-        graph.add_edge(u3, v3, "");
-        graph.add_edge(u4, v2, "");
-        let h1 = vec![u1, u2, u3, u4];
-        let mut h2 = vec![v1, v2, v3];
-        let matrix = graph.adjacency_matrix();
-        b.iter(|| crossing_reduction(&graph, &matrix, &h1, &mut h2));
     }
 }

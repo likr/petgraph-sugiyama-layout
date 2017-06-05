@@ -1,6 +1,3 @@
-#![feature(test)]
-
-extern crate test;
 extern crate petgraph;
 extern crate fixedbitset;
 
