@@ -14,25 +14,21 @@ pub trait Setting {
     fn node_height<N>(&self, node: N) -> usize;
 }
 
-pub struct SugiyamaLayout {
-}
+pub struct SugiyamaLayout {}
 
 impl SugiyamaLayout {
     pub fn new() -> SugiyamaLayout {
-        SugiyamaLayout {
-        }
+        SugiyamaLayout {}
     }
 
     pub fn call<N, E>(&self, input: &Graph<N, E, Directed>) -> Graph<Node, Edge> {
-        let mut graph = input.map(
-            |_, _| Node::new(),
-            |_, _| Edge::new()
-        );
+        let mut graph = input.map(|_, _| Node::new(), |_, _| Edge::new());
         remove_cycle(&mut graph);
         let layers_map = longest_path(&graph);
-        let height = 1 + graph
-            .node_indices()
-            .fold(0, |max, u| cmp::max(max, *layers_map.get(&u).unwrap()));
+        let height = 1 +
+            graph.node_indices().fold(0, |max, u| {
+                cmp::max(max, *layers_map.get(&u).unwrap())
+            });
         let mut layers: Vec<_> = (0..height).map(|_| vec![]).collect();
         for u in graph.node_indices() {
             let layer = layers_map.get(&u).unwrap();
@@ -43,6 +39,14 @@ impl SugiyamaLayout {
             let h1 = layers.get_mut(i - 1).unwrap().clone();
             let mut h2 = layers.get_mut(i).unwrap();
             crossing_reduction(&graph, &matrix, &h1, &mut h2);
+        }
+        for (i, layer) in layers.iter().enumerate() {
+            for (j, &u) in layer.iter().enumerate() {
+                graph[u].width = 100;
+                graph[u].height = 100;
+                graph[u].layer = i;
+                graph[u].order = j;
+            }
         }
         brandes(&mut graph, &layers);
         graph
