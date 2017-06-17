@@ -6,17 +6,9 @@ use super::mark_conflicts::mark_conflicts;
 use super::vertical_alignment::vertical_alignment;
 use super::horizontal_compaction::horizontal_compaction;
 
-pub fn brandes(
-    graph: &mut Graph<Node, Edge, Directed>,
-    layers: &Vec<Vec<NodeIndex>>
-) {
+pub fn brandes(graph: &mut Graph<Node, Edge, Directed>, layers: &Vec<Vec<NodeIndex>>) {
     mark_conflicts(graph, layers);
-    let directions = vec![
-        (false, false),
-        (true, false),
-        (false, true),
-        (true, true),
-    ];
+    let directions = vec![(false, false), (true, false), (false, true), (true, true)];
     let mut xs = Vec::from_iter(graph.node_indices().map(|_| [0; 4]));
     let mut left = [0; 4];
     let mut right = [0; 4];
@@ -76,32 +68,214 @@ mod tests {
     #[test]
     fn test_brandes() {
         let mut graph = Graph::new();
-        let a1 = graph.add_node(Node { width: 10, height: 10, layer: 0, order: 0, dummy: false, .. Node::new() });
-        let a2 = graph.add_node(Node { width: 10, height: 10, layer: 0, order: 1, dummy: false, .. Node::new() });
-        let b1 = graph.add_node(Node { width: 10, height: 10, layer: 1, order: 0, dummy: false, .. Node::new() });
-        let b2 = graph.add_node(Node { width: 10, height: 10, layer: 1, order: 1, dummy: false, .. Node::new() });
-        let b3 = graph.add_node(Node { width: 10, height: 10, layer: 1, order: 2, dummy: true, .. Node::new() });
-        let b4 = graph.add_node(Node { width: 10, height: 10, layer: 1, order: 3, dummy: false, .. Node::new() });
-        let b5 = graph.add_node(Node { width: 10, height: 10, layer: 1, order: 4, dummy: true, .. Node::new() });
-        let b6 = graph.add_node(Node { width: 10, height: 10, layer: 1, order: 5, dummy: true, .. Node::new() });
-        let b7 = graph.add_node(Node { width: 10, height: 10, layer: 1, order: 6, dummy: false, .. Node::new() });
-        let b8 = graph.add_node(Node { width: 10, height: 10, layer: 1, order: 7, dummy: false, .. Node::new() });
-        let c1 = graph.add_node(Node { width: 10, height: 10, layer: 2, order: 0, dummy: false, .. Node::new() });
-        let c2 = graph.add_node(Node { width: 10, height: 10, layer: 2, order: 1, dummy: false, .. Node::new() });
-        let c3 = graph.add_node(Node { width: 10, height: 10, layer: 2, order: 2, dummy: true, .. Node::new() });
-        let c4 = graph.add_node(Node { width: 10, height: 10, layer: 2, order: 3, dummy: true, .. Node::new() });
-        let c5 = graph.add_node(Node { width: 10, height: 10, layer: 2, order: 4, dummy: true, .. Node::new() });
-        let c6 = graph.add_node(Node { width: 10, height: 10, layer: 2, order: 5, dummy: false, .. Node::new() });
-        let d1 = graph.add_node(Node { width: 10, height: 10, layer: 3, order: 0, dummy: false, .. Node::new() });
-        let d2 = graph.add_node(Node { width: 10, height: 10, layer: 3, order: 1, dummy: false, .. Node::new() });
-        let d3 = graph.add_node(Node { width: 10, height: 10, layer: 3, order: 2, dummy: true, .. Node::new() });
-        let d4 = graph.add_node(Node { width: 10, height: 10, layer: 3, order: 3, dummy: true, .. Node::new() });
-        let d5 = graph.add_node(Node { width: 10, height: 10, layer: 3, order: 4, dummy: true, .. Node::new() });
-        let d6 = graph.add_node(Node { width: 10, height: 10, layer: 3, order: 5, dummy: false, .. Node::new() });
-        let d7 = graph.add_node(Node { width: 10, height: 10, layer: 3, order: 6, dummy: true, .. Node::new() });
-        let e1 = graph.add_node(Node { width: 10, height: 10, layer: 4, order: 0, dummy: false, .. Node::new() });
-        let e2 = graph.add_node(Node { width: 10, height: 10, layer: 4, order: 1, dummy: false, .. Node::new() });
-        let e3 = graph.add_node(Node { width: 10, height: 10, layer: 4, order: 2, dummy: false, .. Node::new() });
+        let a1 = graph.add_node(Node {
+            width: 10,
+            height: 10,
+            layer: 0,
+            order: 0,
+            dummy: false,
+            ..Node::new()
+        });
+        let a2 = graph.add_node(Node {
+            width: 10,
+            height: 10,
+            layer: 0,
+            order: 1,
+            dummy: false,
+            ..Node::new()
+        });
+        let b1 = graph.add_node(Node {
+            width: 10,
+            height: 10,
+            layer: 1,
+            order: 0,
+            dummy: false,
+            ..Node::new()
+        });
+        let b2 = graph.add_node(Node {
+            width: 10,
+            height: 10,
+            layer: 1,
+            order: 1,
+            dummy: false,
+            ..Node::new()
+        });
+        let b3 = graph.add_node(Node {
+            width: 10,
+            height: 10,
+            layer: 1,
+            order: 2,
+            dummy: true,
+            ..Node::new()
+        });
+        let b4 = graph.add_node(Node {
+            width: 10,
+            height: 10,
+            layer: 1,
+            order: 3,
+            dummy: false,
+            ..Node::new()
+        });
+        let b5 = graph.add_node(Node {
+            width: 10,
+            height: 10,
+            layer: 1,
+            order: 4,
+            dummy: true,
+            ..Node::new()
+        });
+        let b6 = graph.add_node(Node {
+            width: 10,
+            height: 10,
+            layer: 1,
+            order: 5,
+            dummy: true,
+            ..Node::new()
+        });
+        let b7 = graph.add_node(Node {
+            width: 10,
+            height: 10,
+            layer: 1,
+            order: 6,
+            dummy: false,
+            ..Node::new()
+        });
+        let b8 = graph.add_node(Node {
+            width: 10,
+            height: 10,
+            layer: 1,
+            order: 7,
+            dummy: false,
+            ..Node::new()
+        });
+        let c1 = graph.add_node(Node {
+            width: 10,
+            height: 10,
+            layer: 2,
+            order: 0,
+            dummy: false,
+            ..Node::new()
+        });
+        let c2 = graph.add_node(Node {
+            width: 10,
+            height: 10,
+            layer: 2,
+            order: 1,
+            dummy: false,
+            ..Node::new()
+        });
+        let c3 = graph.add_node(Node {
+            width: 10,
+            height: 10,
+            layer: 2,
+            order: 2,
+            dummy: true,
+            ..Node::new()
+        });
+        let c4 = graph.add_node(Node {
+            width: 10,
+            height: 10,
+            layer: 2,
+            order: 3,
+            dummy: true,
+            ..Node::new()
+        });
+        let c5 = graph.add_node(Node {
+            width: 10,
+            height: 10,
+            layer: 2,
+            order: 4,
+            dummy: true,
+            ..Node::new()
+        });
+        let c6 = graph.add_node(Node {
+            width: 10,
+            height: 10,
+            layer: 2,
+            order: 5,
+            dummy: false,
+            ..Node::new()
+        });
+        let d1 = graph.add_node(Node {
+            width: 10,
+            height: 10,
+            layer: 3,
+            order: 0,
+            dummy: false,
+            ..Node::new()
+        });
+        let d2 = graph.add_node(Node {
+            width: 10,
+            height: 10,
+            layer: 3,
+            order: 1,
+            dummy: false,
+            ..Node::new()
+        });
+        let d3 = graph.add_node(Node {
+            width: 10,
+            height: 10,
+            layer: 3,
+            order: 2,
+            dummy: true,
+            ..Node::new()
+        });
+        let d4 = graph.add_node(Node {
+            width: 10,
+            height: 10,
+            layer: 3,
+            order: 3,
+            dummy: true,
+            ..Node::new()
+        });
+        let d5 = graph.add_node(Node {
+            width: 10,
+            height: 10,
+            layer: 3,
+            order: 4,
+            dummy: true,
+            ..Node::new()
+        });
+        let d6 = graph.add_node(Node {
+            width: 10,
+            height: 10,
+            layer: 3,
+            order: 5,
+            dummy: false,
+            ..Node::new()
+        });
+        let d7 = graph.add_node(Node {
+            width: 10,
+            height: 10,
+            layer: 3,
+            order: 6,
+            dummy: true,
+            ..Node::new()
+        });
+        let e1 = graph.add_node(Node {
+            width: 10,
+            height: 10,
+            layer: 4,
+            order: 0,
+            dummy: false,
+            ..Node::new()
+        });
+        let e2 = graph.add_node(Node {
+            width: 10,
+            height: 10,
+            layer: 4,
+            order: 1,
+            dummy: false,
+            ..Node::new()
+        });
+        let e3 = graph.add_node(Node {
+            width: 10,
+            height: 10,
+            layer: 4,
+            order: 2,
+            dummy: false,
+            ..Node::new()
+        });
         graph.add_edge(a1, b1, Edge::new());
         graph.add_edge(a1, b6, Edge::new());
         graph.add_edge(a1, b8, Edge::new());

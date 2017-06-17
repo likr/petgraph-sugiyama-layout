@@ -6,7 +6,7 @@ fn dfs<N, E>(
     graph: &Graph<N, E, Directed>,
     layers: &mut HashMap<NodeIndex, usize>,
     u: NodeIndex,
-    depth: usize
+    depth: usize,
 ) {
     for v in graph.neighbors(u) {
         if layers.contains_key(&v) {
@@ -21,9 +21,7 @@ fn dfs<N, E>(
     }
 }
 
-pub fn longest_path<N, E>(
-    graph: &Graph<N, E, Directed>
-) -> HashMap<NodeIndex, usize> {
+pub fn longest_path<N, E>(graph: &Graph<N, E, Directed>) -> HashMap<NodeIndex, usize> {
     let mut result = HashMap::new();
     for u in graph.externals(EdgeDirection::Incoming) {
         result.insert(u, 0);

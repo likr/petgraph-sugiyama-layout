@@ -1,5 +1,6 @@
 use petgraph::graph::NodeIndex;
 
+#[derive(Clone)]
 pub struct Node {
     pub layer: usize,
     pub order: usize,
@@ -30,16 +31,39 @@ impl Node {
             shift: i32::min_value(),
         }
     }
+
+    pub fn new_dummy() -> Node {
+        let mut node = Node::new();
+        node.dummy = true;
+        node
+    }
 }
 
+#[derive(Clone)]
 pub struct Edge {
     pub conflict: bool,
+    pub reversed: bool,
 }
 
 impl Edge {
     pub fn new() -> Edge {
         Edge {
             conflict: false,
+            reversed: false,
+        }
+    }
+
+    pub fn new_reversed() -> Edge {
+        let mut edge = Edge::new();
+        edge.reversed = true;
+        edge
+    }
+
+    pub fn new_split(original: &Edge) -> Edge {
+        if original.reversed {
+            Edge::new_reversed()
+        } else {
+            Edge::new()
         }
     }
 }

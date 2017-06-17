@@ -7,6 +7,7 @@ use super::cycle_removal::remove_cycle;
 use super::layer_assignment::longest_path;
 use super::crossing_reduction::crossing_reduction;
 use super::position_assignment::brandes::brandes;
+use super::normalize::normalize;
 
 pub trait Setting {
     fn node_width<N>(&self, node: N) -> usize;
@@ -24,7 +25,8 @@ impl SugiyamaLayout {
     pub fn call<N, E>(&self, input: &Graph<N, E, Directed>) -> Graph<Node, Edge> {
         let mut graph = input.map(|_, _| Node::new(), |_, _| Edge::new());
         remove_cycle(&mut graph);
-        let layers_map = longest_path(&graph);
+        let mut layers_map = longest_path(&graph);
+        normalize(&mut graph, &mut layers_map);
         let height = 1 +
             graph.node_indices().fold(0, |max, u| {
                 cmp::max(max, *layers_map.get(&u).unwrap())

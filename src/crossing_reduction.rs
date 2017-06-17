@@ -8,7 +8,7 @@ fn bary_center<N, E>(
     graph: &Graph<N, E, Directed>,
     matrix: &FixedBitSet,
     h1: &Vec<NodeIndex>,
-    h2: &Vec<NodeIndex>
+    h2: &Vec<NodeIndex>,
 ) -> HashMap<NodeIndex, f64> {
     let mut result = HashMap::new();
     for v in h2 {
@@ -29,7 +29,7 @@ pub fn crossing_reduction<N, E>(
     graph: &Graph<N, E, Directed>,
     matrix: &FixedBitSet,
     h1: &Vec<NodeIndex>,
-    h2: &mut Vec<NodeIndex>
+    h2: &mut Vec<NodeIndex>,
 ) {
     let values = bary_center(graph, matrix, h1, h2);
     h2.sort_by(|u, v| {

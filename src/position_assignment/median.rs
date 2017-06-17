@@ -6,7 +6,7 @@ use super::super::graph::{Node, Edge};
 pub fn median(
     graph: &Graph<Node, Edge, Directed>,
     u: NodeIndex,
-    direction: EdgeDirection
+    direction: EdgeDirection,
 ) -> Option<(NodeIndex, NodeIndex)> {
     let mut vertices = Vec::from_iter(graph.neighbors_directed(u, direction));
     if vertices.len() == 0 {

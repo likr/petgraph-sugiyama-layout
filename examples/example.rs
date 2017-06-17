@@ -54,40 +54,69 @@ fn write_to_svg(layout: &Graph<Node, Edge>) {
 
     let svg = XmlEvent::start_element("svg").attr("xmlns", "http://www.w3.org/2000/svg");
     write(&mut writer, svg);
-    let nodes = XmlEvent::start_element("g").attr("class", "nodes");
-    write(&mut writer, nodes);
-    for u in layout.node_indices() {
-        let ref node = layout[u];
-        let transform = &format!("translate({},{})", node.x, node.y);
-        let g = XmlEvent::start_element("g").attr("transform", transform);
-        write(&mut writer, g);
-        {
-            let width = &format!("{}", node.width);
-            let height = &format!("{}", node.height);
-            let rect = XmlEvent::start_element("rect")
-                .attr("width", width)
-                .attr("height", height)
-                .attr("fill", "none")
-                .attr("stroke", "black")
-                .attr("stroke-width", "1");
-            write(&mut writer, rect);
-            write(&mut writer, XmlEvent::end_element());
-        }
-        {
-            let x = &format!("{}", node.width / 2);
-            let y = &format!("{}", node.height / 2 + 8);
-            let text = XmlEvent::start_element("text")
-                .attr("x", x)
-                .attr("y", y)
-                .attr("text-anchor", "middle");
-            write(&mut writer, text);
-            let content = &format!("{}", u.index());
-            write(&mut writer, XmlEvent::characters(content));
+    {
+        let edges = XmlEvent::start_element("g").attr("class", "edges");
+        write(&mut writer, edges);
+        for e in layout.edge_indices() {
+            let (u, v) = layout.edge_endpoints(e).unwrap();
+            let ref u_node = layout[u];
+            let ref v_node = layout[v];
+            let g = XmlEvent::start_element("g");
+            write(&mut writer, g);
+            {
+                let x1 = &format!("{}", u_node.x + u_node.width as i32 / 2);
+                let y1 = &format!("{}", u_node.y + u_node.height as i32 / 2);
+                let x2 = &format!("{}", v_node.x + v_node.width as i32 / 2);
+                let y2 = &format!("{}", v_node.y + v_node.height as i32 / 2);
+                let line = XmlEvent::start_element("line")
+                    .attr("x1", x1)
+                    .attr("y1", y1)
+                    .attr("x2", x2)
+                    .attr("y2", y2)
+                    .attr("stroke", "black");
+                write(&mut writer, line);
+                write(&mut writer, XmlEvent::end_element());
+            }
             write(&mut writer, XmlEvent::end_element());
         }
         write(&mut writer, XmlEvent::end_element());
     }
-    write(&mut writer, XmlEvent::end_element());
+    {
+        let nodes = XmlEvent::start_element("g").attr("class", "nodes");
+        write(&mut writer, nodes);
+        for u in layout.node_indices() {
+            let ref node = layout[u];
+            let transform = &format!("translate({},{})", node.x, node.y);
+            let g = XmlEvent::start_element("g").attr("transform", transform);
+            write(&mut writer, g);
+            {
+                let width = &format!("{}", node.width);
+                let height = &format!("{}", node.height);
+                let rect = XmlEvent::start_element("rect")
+                    .attr("width", width)
+                    .attr("height", height)
+                    .attr("fill", "none")
+                    .attr("stroke", "black")
+                    .attr("stroke-width", "1");
+                write(&mut writer, rect);
+                write(&mut writer, XmlEvent::end_element());
+            }
+            {
+                let x = &format!("{}", node.width / 2);
+                let y = &format!("{}", node.height / 2 + 8);
+                let text = XmlEvent::start_element("text")
+                    .attr("x", x)
+                    .attr("y", y)
+                    .attr("text-anchor", "middle");
+                write(&mut writer, text);
+                let content = &format!("{}", u.index());
+                write(&mut writer, XmlEvent::characters(content));
+                write(&mut writer, XmlEvent::end_element());
+            }
+            write(&mut writer, XmlEvent::end_element());
+        }
+        write(&mut writer, XmlEvent::end_element());
+    }
     write(&mut writer, XmlEvent::end_element());
 }
 

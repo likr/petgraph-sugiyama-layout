@@ -7,12 +7,12 @@ pub fn cross<N, E>(
     graph: &Graph<N, E, Directed>,
     matrix: &FixedBitSet,
     h1: &Vec<NodeIndex>,
-    h2: &Vec<NodeIndex>
+    h2: &Vec<NodeIndex>,
 ) -> u32 {
     let mut result = 0;
     let n = h1.len();
     let m = h2.len();
-    for j2 in 0..m-1 {
+    for j2 in 0..m - 1 {
         let mut count = 0;
         for i2 in (1..n).rev() {
             let i1 = i2 - 1;
@@ -20,7 +20,7 @@ pub fn cross<N, E>(
                 count += 1
             }
             if count > 0 {
-                for j1 in j2+1..m {
+                for j1 in j2 + 1..m {
                     if graph.is_adjacent(&matrix, h1[i1].clone(), h2[j1].clone()) {
                         result += count
                     }

@@ -4,12 +4,12 @@ use petgraph::graph::NodeIndex;
 use petgraph::visit::{VisitMap, Visitable};
 use fixedbitset::FixedBitSet;
 
-fn dfs<N, E> (
+fn dfs<N, E>(
     graph: &Graph<N, E, Directed>,
     map: &mut FixedBitSet,
     ancestors: &mut HashSet<NodeIndex>,
     result: &mut Vec<(NodeIndex, NodeIndex)>,
-    u: NodeIndex
+    u: NodeIndex,
 ) {
     if map.is_visited(&u) {
         return;
@@ -26,9 +26,7 @@ fn dfs<N, E> (
     ancestors.remove(&u);
 }
 
-pub fn cycle_edges<N, E> (
-    graph: &Graph<N, E, Directed>
-) -> Vec<(NodeIndex, NodeIndex)> {
+pub fn cycle_edges<N, E>(graph: &Graph<N, E, Directed>) -> Vec<(NodeIndex, NodeIndex)> {
     let mut map = graph.visit_map();
     let mut ancestors = HashSet::new();
     let mut result = vec![];
@@ -38,9 +36,7 @@ pub fn cycle_edges<N, E> (
     result
 }
 
-pub fn remove_cycle<N, E> (
-    graph: &mut Graph<N, E, Directed>
-) {
+pub fn remove_cycle<N, E>(graph: &mut Graph<N, E, Directed>) {
     for (u, v) in cycle_edges(graph) {
         let index = graph.find_edge(u, v).unwrap();
         let weight = graph.remove_edge(index).unwrap();
