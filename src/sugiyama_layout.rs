@@ -4,7 +4,7 @@ use petgraph::graph::NodeIndex;
 use petgraph::visit::GetAdjacencyMatrix;
 use super::graph::{Node, Edge};
 use super::cycle_removal::remove_cycle;
-use super::layer_assignment::longest_path;
+use super::ranking::{RankingModule, LongetPathRanking};
 use super::crossing_reduction::crossing_reduction;
 use super::position_assignment::brandes::brandes;
 use super::normalize::normalize;
@@ -15,17 +15,24 @@ pub trait Setting {
     fn node_height<N>(&self, node: N) -> usize;
 }
 
-pub struct SugiyamaLayout {}
+pub struct SugiyamaLayout<R = LongetPathRanking>
+where
+    R: RankingModule,
+{
+    ranking_module: R,
+}
 
 impl SugiyamaLayout {
-    pub fn new() -> SugiyamaLayout {
-        SugiyamaLayout {}
+    pub fn new() -> SugiyamaLayout<LongetPathRanking> {
+        SugiyamaLayout { ranking_module: LongetPathRanking::new() }
     }
+}
 
+impl<R: RankingModule> SugiyamaLayout<R> {
     pub fn call<N, E>(&self, input: &Graph<N, E, Directed>) -> Graph<Node, Edge> {
         let mut graph = input.map(|_, _| Node::new(), |_, _| Edge::new());
         remove_cycle(&mut graph);
-        let mut layers_map = longest_path(&graph);
+        let mut layers_map = self.ranking_module.call(&graph);
         normalize(&mut graph, &mut layers_map);
         let height = 1 +
             graph.node_indices().fold(0, |max, u| {
