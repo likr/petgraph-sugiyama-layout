@@ -9,31 +9,92 @@ use petgraph_sugiyama_layout::sugiyama_layout::SugiyamaLayout;
 use petgraph_sugiyama_layout::graph::{Node, Edge};
 use xml::writer::{EventWriter, EmitterConfig, XmlEvent};
 
+// fn example_graph() -> Graph<(), ()> {
+//     let mut graph = Graph::new();
+//     let a1 = graph.add_node(());
+//     let a2 = graph.add_node(());
+//     let a3 = graph.add_node(());
+//     let b1 = graph.add_node(());
+//     let b2 = graph.add_node(());
+//     let b3 = graph.add_node(());
+//     let c1 = graph.add_node(());
+//     let c2 = graph.add_node(());
+//     let c3 = graph.add_node(());
+//     let d1 = graph.add_node(());
+//     let d2 = graph.add_node(());
+//     let d3 = graph.add_node(());
+//     graph.add_edge(a1, b2, ());
+//     graph.add_edge(a2, b1, ());
+//     graph.add_edge(a3, b1, ());
+//     graph.add_edge(b1, c1, ());
+//     graph.add_edge(b2, c1, ());
+//     graph.add_edge(b2, c2, ());
+//     graph.add_edge(b2, c3, ());
+//     graph.add_edge(b3, c2, ());
+//     graph.add_edge(c1, d3, ());
+//     graph.add_edge(c2, d1, ());
+//     graph.add_edge(c2, d2, ());
+//     graph
+// }
+
 fn example_graph() -> Graph<(), ()> {
     let mut graph = Graph::new();
     let a1 = graph.add_node(());
     let a2 = graph.add_node(());
-    let a3 = graph.add_node(());
     let b1 = graph.add_node(());
     let b2 = graph.add_node(());
     let b3 = graph.add_node(());
+    let b4 = graph.add_node(());
+    let b5 = graph.add_node(());
+    let b6 = graph.add_node(());
+    let b7 = graph.add_node(());
+    let b8 = graph.add_node(());
     let c1 = graph.add_node(());
     let c2 = graph.add_node(());
     let c3 = graph.add_node(());
+    let c4 = graph.add_node(());
+    let c5 = graph.add_node(());
+    let c6 = graph.add_node(());
     let d1 = graph.add_node(());
     let d2 = graph.add_node(());
     let d3 = graph.add_node(());
-    graph.add_edge(a1, b2, ());
-    graph.add_edge(a2, b1, ());
-    graph.add_edge(a3, b1, ());
-    graph.add_edge(b1, c1, ());
-    graph.add_edge(b2, c1, ());
+    let d4 = graph.add_node(());
+    let d5 = graph.add_node(());
+    let d6 = graph.add_node(());
+    let d7 = graph.add_node(());
+    let e1 = graph.add_node(());
+    let e2 = graph.add_node(());
+    let e3 = graph.add_node(());
+    graph.add_edge(a1, b1, ());
+    graph.add_edge(a1, b6, ());
+    graph.add_edge(a1, b8, ());
+    graph.add_edge(a2, b3, ());
+    graph.add_edge(a2, b5, ());
     graph.add_edge(b2, c2, ());
-    graph.add_edge(b2, c3, ());
     graph.add_edge(b3, c2, ());
-    graph.add_edge(c1, d3, ());
-    graph.add_edge(c2, d1, ());
-    graph.add_edge(c2, d2, ());
+    graph.add_edge(b4, c2, ());
+    graph.add_edge(b5, c3, ());
+    graph.add_edge(b6, c4, ());
+    graph.add_edge(b7, c2, ());
+    graph.add_edge(b7, c6, ());
+    graph.add_edge(b8, c2, ());
+    graph.add_edge(b8, c5, ());
+    graph.add_edge(c1, d1, ());
+    graph.add_edge(c1, d2, ());
+    graph.add_edge(c1, d6, ());
+    graph.add_edge(c3, d4, ());
+    graph.add_edge(c4, d5, ());
+    graph.add_edge(c5, d6, ());
+    graph.add_edge(c6, d3, ());
+    graph.add_edge(c6, d7, ());
+    graph.add_edge(d1, e1, ());
+    graph.add_edge(d1, e2, ());
+    graph.add_edge(d2, e2, ());
+    graph.add_edge(d3, e1, ());
+    graph.add_edge(d4, e3, ());
+    graph.add_edge(d5, e3, ());
+    graph.add_edge(d6, e3, ());
+    graph.add_edge(d7, e3, ());
     graph
 }
 
@@ -64,10 +125,10 @@ fn write_to_svg(layout: &Graph<Node, Edge>) {
             let g = XmlEvent::start_element("g");
             write(&mut writer, g);
             {
-                let x1 = &format!("{}", u_node.x + u_node.width as i32 / 2);
-                let y1 = &format!("{}", u_node.y + u_node.height as i32 / 2);
-                let x2 = &format!("{}", v_node.x + v_node.width as i32 / 2);
-                let y2 = &format!("{}", v_node.y + v_node.height as i32 / 2);
+                let x1 = &format!("{}", u_node.x);
+                let y1 = &format!("{}", u_node.y);
+                let x2 = &format!("{}", v_node.x);
+                let y2 = &format!("{}", v_node.y);
                 let line = XmlEvent::start_element("line")
                     .attr("x1", x1)
                     .attr("y1", y1)
@@ -86,7 +147,11 @@ fn write_to_svg(layout: &Graph<Node, Edge>) {
         write(&mut writer, nodes);
         for u in layout.node_indices() {
             let ref node = layout[u];
-            let transform = &format!("translate({},{})", node.x, node.y);
+            let transform = &format!(
+                "translate({},{})",
+                node.x - node.width as i32 / 2,
+                node.y - node.height as i32 / 2
+            );
             let g = XmlEvent::start_element("g").attr("transform", transform);
             write(&mut writer, g);
             {

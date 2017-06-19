@@ -6,14 +6,43 @@ use super::mark_conflicts::mark_conflicts;
 use super::vertical_alignment::vertical_alignment;
 use super::horizontal_compaction::horizontal_compaction;
 
+fn set_y(graph: &mut Graph<Node, Edge>, layers: &Vec<Vec<NodeIndex>>) {
+    let mut y_offset = 0;
+    for layer in layers {
+        let max_height = layer.iter().map(|u| graph[*u].height).max().unwrap() as i32;
+        y_offset += max_height / 2;
+        for &u in layer {
+            graph[u].y = y_offset;
+        }
+        y_offset += max_height / 2
+    }
+}
+
+fn normalize(graph: &mut Graph<Node, Edge>) {
+    let x_min = graph
+        .node_indices()
+        .map(|u| graph[u].x - graph[u].orig_width as i32 / 2)
+        .min()
+        .unwrap();
+    let y_min = graph
+        .node_indices()
+        .map(|u| graph[u].y - graph[u].orig_height as i32 / 2)
+        .min()
+        .unwrap();
+    for u in graph.node_indices() {
+        graph[u].x -= x_min;
+        graph[u].y -= y_min;
+    }
+}
+
 pub fn brandes(graph: &mut Graph<Node, Edge, Directed>, layers: &Vec<Vec<NodeIndex>>) {
     mark_conflicts(graph, layers);
     let directions = vec![(false, false), (true, false), (false, true), (true, true)];
     let mut xs = Vec::from_iter(graph.node_indices().map(|_| [0; 4]));
     let mut left = [0; 4];
     let mut right = [0; 4];
-    for (i, direction) in directions.iter().enumerate() {
-        let (rtol, btot) = *direction;
+    for (i, &direction) in directions.iter().enumerate() {
+        let (rtol, btot) = direction;
         vertical_alignment(graph, layers, rtol, btot);
         horizontal_compaction(graph, layers, rtol);
         if rtol {
@@ -23,40 +52,31 @@ pub fn brandes(graph: &mut Graph<Node, Edge, Directed>, layers: &Vec<Vec<NodeInd
         }
         left[i] = graph.node_indices().map(|u| graph[u].x).min().unwrap();
         right[i] = graph.node_indices().map(|u| graph[u].x).max().unwrap();
-        for u in graph.node_indices() {
-            xs[u.index()][i] = graph[u].x;
+        for (j, u) in graph.node_indices().enumerate() {
+            xs[j][i] = graph[u].x;
         }
     }
-    let min_width_index = (0..4).min_by_key(|i| right[*i] - left[*i]).unwrap();
-    for (i, direction) in directions.iter().enumerate() {
-        let (rtol, _) = *direction;
+    let min_width_index = (0..4).min_by_key(|&i| right[i] - left[i]).unwrap();
+    for (i, &direction) in directions.iter().enumerate() {
+        let (rtol, _) = direction;
         if rtol {
-            for u in graph.node_indices() {
-                xs[u.index()][i] += right[min_width_index] - right[i]
+            for j in 0..graph.node_count() {
+                xs[j][i] += right[min_width_index] - right[i];
             }
         } else {
-            for u in graph.node_indices() {
-                xs[u.index()][i] += left[min_width_index] - left[i]
+            for j in 0..graph.node_count() {
+                xs[j][i] += left[min_width_index] - left[i];
             }
         }
     }
 
-    let mut y_offset = 0;
-    for layer in layers {
-        let max_height = layer.iter().map(|u| graph[*u].height).max().unwrap() as i32;
-        y_offset += max_height / 2;
-        for u in layer {
-            graph[*u].y = y_offset;
-        }
-        y_offset += max_height / 2
+    for (i, u) in graph.node_indices().enumerate() {
+        xs[i].sort();
+        graph[u].x = (xs[i][1] + xs[i][2]) / 2;
     }
 
-    let x_min = graph.node_indices().map(|u| graph[u].x).min().unwrap();
-    let y_min = graph.node_indices().map(|u| graph[u].y).min().unwrap();
-    for u in graph.node_indices() {
-        graph[u].x -= x_min;
-        graph[u].y -= y_min;
-    }
+    set_y(graph, layers);
+    normalize(graph);
 }
 
 #[cfg(test)]
@@ -71,6 +91,8 @@ mod tests {
         let a1 = graph.add_node(Node {
             width: 10,
             height: 10,
+            orig_width: 10,
+            orig_height: 10,
             layer: 0,
             order: 0,
             dummy: false,
@@ -79,6 +101,8 @@ mod tests {
         let a2 = graph.add_node(Node {
             width: 10,
             height: 10,
+            orig_width: 10,
+            orig_height: 10,
             layer: 0,
             order: 1,
             dummy: false,
@@ -87,6 +111,8 @@ mod tests {
         let b1 = graph.add_node(Node {
             width: 10,
             height: 10,
+            orig_width: 10,
+            orig_height: 10,
             layer: 1,
             order: 0,
             dummy: false,
@@ -95,6 +121,8 @@ mod tests {
         let b2 = graph.add_node(Node {
             width: 10,
             height: 10,
+            orig_width: 10,
+            orig_height: 10,
             layer: 1,
             order: 1,
             dummy: false,
@@ -103,6 +131,8 @@ mod tests {
         let b3 = graph.add_node(Node {
             width: 10,
             height: 10,
+            orig_width: 10,
+            orig_height: 10,
             layer: 1,
             order: 2,
             dummy: true,
@@ -111,6 +141,8 @@ mod tests {
         let b4 = graph.add_node(Node {
             width: 10,
             height: 10,
+            orig_width: 10,
+            orig_height: 10,
             layer: 1,
             order: 3,
             dummy: false,
@@ -119,6 +151,8 @@ mod tests {
         let b5 = graph.add_node(Node {
             width: 10,
             height: 10,
+            orig_width: 10,
+            orig_height: 10,
             layer: 1,
             order: 4,
             dummy: true,
@@ -127,6 +161,8 @@ mod tests {
         let b6 = graph.add_node(Node {
             width: 10,
             height: 10,
+            orig_width: 10,
+            orig_height: 10,
             layer: 1,
             order: 5,
             dummy: true,
@@ -135,6 +171,8 @@ mod tests {
         let b7 = graph.add_node(Node {
             width: 10,
             height: 10,
+            orig_width: 10,
+            orig_height: 10,
             layer: 1,
             order: 6,
             dummy: false,
@@ -143,6 +181,8 @@ mod tests {
         let b8 = graph.add_node(Node {
             width: 10,
             height: 10,
+            orig_width: 10,
+            orig_height: 10,
             layer: 1,
             order: 7,
             dummy: false,
@@ -151,6 +191,8 @@ mod tests {
         let c1 = graph.add_node(Node {
             width: 10,
             height: 10,
+            orig_width: 10,
+            orig_height: 10,
             layer: 2,
             order: 0,
             dummy: false,
@@ -159,6 +201,8 @@ mod tests {
         let c2 = graph.add_node(Node {
             width: 10,
             height: 10,
+            orig_width: 10,
+            orig_height: 10,
             layer: 2,
             order: 1,
             dummy: false,
@@ -167,6 +211,8 @@ mod tests {
         let c3 = graph.add_node(Node {
             width: 10,
             height: 10,
+            orig_width: 10,
+            orig_height: 10,
             layer: 2,
             order: 2,
             dummy: true,
@@ -175,6 +221,8 @@ mod tests {
         let c4 = graph.add_node(Node {
             width: 10,
             height: 10,
+            orig_width: 10,
+            orig_height: 10,
             layer: 2,
             order: 3,
             dummy: true,
@@ -183,6 +231,8 @@ mod tests {
         let c5 = graph.add_node(Node {
             width: 10,
             height: 10,
+            orig_width: 10,
+            orig_height: 10,
             layer: 2,
             order: 4,
             dummy: true,
@@ -191,6 +241,8 @@ mod tests {
         let c6 = graph.add_node(Node {
             width: 10,
             height: 10,
+            orig_width: 10,
+            orig_height: 10,
             layer: 2,
             order: 5,
             dummy: false,
@@ -199,6 +251,8 @@ mod tests {
         let d1 = graph.add_node(Node {
             width: 10,
             height: 10,
+            orig_width: 10,
+            orig_height: 10,
             layer: 3,
             order: 0,
             dummy: false,
@@ -207,6 +261,8 @@ mod tests {
         let d2 = graph.add_node(Node {
             width: 10,
             height: 10,
+            orig_width: 10,
+            orig_height: 10,
             layer: 3,
             order: 1,
             dummy: false,
@@ -215,6 +271,8 @@ mod tests {
         let d3 = graph.add_node(Node {
             width: 10,
             height: 10,
+            orig_width: 10,
+            orig_height: 10,
             layer: 3,
             order: 2,
             dummy: true,
@@ -223,6 +281,8 @@ mod tests {
         let d4 = graph.add_node(Node {
             width: 10,
             height: 10,
+            orig_width: 10,
+            orig_height: 10,
             layer: 3,
             order: 3,
             dummy: true,
@@ -231,6 +291,8 @@ mod tests {
         let d5 = graph.add_node(Node {
             width: 10,
             height: 10,
+            orig_width: 10,
+            orig_height: 10,
             layer: 3,
             order: 4,
             dummy: true,
@@ -239,6 +301,8 @@ mod tests {
         let d6 = graph.add_node(Node {
             width: 10,
             height: 10,
+            orig_width: 10,
+            orig_height: 10,
             layer: 3,
             order: 5,
             dummy: false,
@@ -247,6 +311,8 @@ mod tests {
         let d7 = graph.add_node(Node {
             width: 10,
             height: 10,
+            orig_width: 10,
+            orig_height: 10,
             layer: 3,
             order: 6,
             dummy: true,
@@ -255,6 +321,8 @@ mod tests {
         let e1 = graph.add_node(Node {
             width: 10,
             height: 10,
+            orig_width: 10,
+            orig_height: 10,
             layer: 4,
             order: 0,
             dummy: false,
@@ -263,6 +331,8 @@ mod tests {
         let e2 = graph.add_node(Node {
             width: 10,
             height: 10,
+            orig_width: 10,
+            orig_height: 10,
             layer: 4,
             order: 1,
             dummy: false,
@@ -271,6 +341,8 @@ mod tests {
         let e3 = graph.add_node(Node {
             width: 10,
             height: 10,
+            orig_width: 10,
+            orig_height: 10,
             layer: 4,
             order: 2,
             dummy: false,
@@ -314,57 +386,57 @@ mod tests {
             vec![e1, e2, e3],
         ];
         brandes(&mut graph, &layers);
-        assert_eq!(graph[a1].x, 80);
-        assert_eq!(graph[a2].x, 90);
-        assert_eq!(graph[b1].x, 0);
-        assert_eq!(graph[b2].x, 10);
-        assert_eq!(graph[b3].x, 20);
-        assert_eq!(graph[b4].x, 30);
-        assert_eq!(graph[b5].x, 40);
-        assert_eq!(graph[b6].x, 50);
-        assert_eq!(graph[b7].x, 70);
-        assert_eq!(graph[b8].x, 80);
-        assert_eq!(graph[c1].x, 20);
+        assert_eq!(graph[a1].x, 50);
+        assert_eq!(graph[a2].x, 60);
+        assert_eq!(graph[b1].x, 5);
+        assert_eq!(graph[b2].x, 15);
+        assert_eq!(graph[b3].x, 25);
+        assert_eq!(graph[b4].x, 35);
+        assert_eq!(graph[b5].x, 45);
+        assert_eq!(graph[b6].x, 55);
+        assert_eq!(graph[b7].x, 65);
+        assert_eq!(graph[b8].x, 75);
+        assert_eq!(graph[c1].x, 15);
         assert_eq!(graph[c2].x, 30);
-        assert_eq!(graph[c3].x, 40);
-        assert_eq!(graph[c4].x, 50);
-        assert_eq!(graph[c5].x, 60);
-        assert_eq!(graph[c6].x, 70);
+        assert_eq!(graph[c3].x, 45);
+        assert_eq!(graph[c4].x, 55);
+        assert_eq!(graph[c5].x, 75);
+        assert_eq!(graph[c6].x, 85);
         assert_eq!(graph[d1].x, 10);
         assert_eq!(graph[d2].x, 20);
         assert_eq!(graph[d3].x, 30);
-        assert_eq!(graph[d4].x, 40);
-        assert_eq!(graph[d5].x, 50);
-        assert_eq!(graph[d6].x, 60);
-        assert_eq!(graph[d7].x, 70);
-        assert_eq!(graph[e1].x, 70);
-        assert_eq!(graph[e2].x, 80);
-        assert_eq!(graph[e3].x, 90);
-        assert_eq!(graph[a1].y, 0);
-        assert_eq!(graph[a2].y, 0);
-        assert_eq!(graph[b1].y, 10);
-        assert_eq!(graph[b2].y, 10);
-        assert_eq!(graph[b3].y, 10);
-        assert_eq!(graph[b4].y, 10);
-        assert_eq!(graph[b5].y, 10);
-        assert_eq!(graph[b6].y, 10);
-        assert_eq!(graph[b7].y, 10);
-        assert_eq!(graph[b8].y, 10);
-        assert_eq!(graph[c1].y, 20);
-        assert_eq!(graph[c2].y, 20);
-        assert_eq!(graph[c3].y, 20);
-        assert_eq!(graph[c4].y, 20);
-        assert_eq!(graph[c5].y, 20);
-        assert_eq!(graph[c6].y, 20);
-        assert_eq!(graph[d1].y, 30);
-        assert_eq!(graph[d2].y, 30);
-        assert_eq!(graph[d3].y, 30);
-        assert_eq!(graph[d4].y, 30);
-        assert_eq!(graph[d5].y, 30);
-        assert_eq!(graph[d6].y, 30);
-        assert_eq!(graph[d7].y, 30);
-        assert_eq!(graph[e1].y, 40);
-        assert_eq!(graph[e2].y, 40);
-        assert_eq!(graph[e3].y, 40);
+        assert_eq!(graph[d4].x, 45);
+        assert_eq!(graph[d5].x, 55);
+        assert_eq!(graph[d6].x, 75);
+        assert_eq!(graph[d7].x, 85);
+        assert_eq!(graph[e1].x, 10);
+        assert_eq!(graph[e2].x, 20);
+        assert_eq!(graph[e3].x, 55);
+        assert_eq!(graph[a1].y, 5);
+        assert_eq!(graph[a2].y, 5);
+        assert_eq!(graph[b1].y, 15);
+        assert_eq!(graph[b2].y, 15);
+        assert_eq!(graph[b3].y, 15);
+        assert_eq!(graph[b4].y, 15);
+        assert_eq!(graph[b5].y, 15);
+        assert_eq!(graph[b6].y, 15);
+        assert_eq!(graph[b7].y, 15);
+        assert_eq!(graph[b8].y, 15);
+        assert_eq!(graph[c1].y, 25);
+        assert_eq!(graph[c2].y, 25);
+        assert_eq!(graph[c3].y, 25);
+        assert_eq!(graph[c4].y, 25);
+        assert_eq!(graph[c5].y, 25);
+        assert_eq!(graph[c6].y, 25);
+        assert_eq!(graph[d1].y, 35);
+        assert_eq!(graph[d2].y, 35);
+        assert_eq!(graph[d3].y, 35);
+        assert_eq!(graph[d4].y, 35);
+        assert_eq!(graph[d5].y, 35);
+        assert_eq!(graph[d6].y, 35);
+        assert_eq!(graph[d7].y, 35);
+        assert_eq!(graph[e1].y, 45);
+        assert_eq!(graph[e2].y, 45);
+        assert_eq!(graph[e3].y, 45);
     }
 }

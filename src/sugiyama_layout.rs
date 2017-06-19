@@ -1,6 +1,5 @@
 use std::cmp;
 use petgraph::{Graph, Directed};
-use petgraph::graph::NodeIndex;
 use petgraph::visit::GetAdjacencyMatrix;
 use super::graph::{Node, Edge};
 use super::cycle_removal::remove_cycle;
@@ -53,6 +52,8 @@ impl<R: RankingModule> SugiyamaLayout<R> {
             for (j, &u) in layer.iter().enumerate() {
                 graph[u].width = 100;
                 graph[u].height = 100;
+                graph[u].orig_width = 100;
+                graph[u].orig_height = 100;
                 graph[u].layer = i;
                 graph[u].order = j;
             }
